@@ -76,6 +76,7 @@ pipeline {
             steps {
                 echo "=== Deploiement du DAG vers Airflow ==="
                 sh '''
+                    mkdir -p /opt/airflow/dags/
                     cp dags/ecommerce_sales_pipeline.py "${AIRFLOW_DAGS_DIR}/"
                     echo "DAG déployé vers ${AIRFLOW_DAGS_DIR}"
                 '''
