@@ -1,0 +1,343 @@
+{
+  "execution_date": "2026-07-11",
+  "dag_id": "ecommerce_sales_pipeline",
+  "dataset": "ecommerce_informatique",
+  "source_file": "dataset.csv",
+  "status": "success",
+  "global_metrics": {
+    "nb_commandes": 14958,
+    "nb_clients": 14742,
+    "chiffre_affaires": 1833730.5,
+    "panier_moyen": 122.59
+  },
+  "top_products": [
+    {
+      "Produit": "SKU-d6160fb787",
+      "sales": 33,
+      "revenue": 45949.35
+    },
+    {
+      "Produit": "SKU-d1c427060a",
+      "sales": 332,
+      "revenue": 45620.56
+    },
+    {
+      "Produit": "SKU-3dd2a17168",
+      "sales": 272,
+      "revenue": 40782.8
+    },
+    {
+      "Produit": "SKU-588531f8ec",
+      "sales": 20,
+      "revenue": 28291.99
+    },
+    {
+      "Produit": "SKU-a5215a7a9f",
+      "sales": 17,
+      "revenue": 21739.9
+    },
+    {
+      "Produit": "SKU-bc4cd4da98",
+      "sales": 17,
+      "revenue": 21499.59
+    },
+    {
+      "Produit": "SKU-fb01a5fc09",
+      "sales": 24,
+      "revenue": 16731.79
+    },
+    {
+      "Produit": "SKU-e7cc48a9da",
+      "sales": 89,
+      "revenue": 15536.0
+    },
+    {
+      "Produit": "SKU-e53e557d5a",
+      "sales": 181,
+      "revenue": 15263.44
+    },
+    {
+      "Produit": "SKU-a04087ab6a",
+      "sales": 24,
+      "revenue": 15186.0
+    }
+  ],
+  "region_metrics": [
+    {
+      "region": "Sao Paulo",
+      "orders": 5783,
+      "revenue": 646072.71
+    },
+    {
+      "region": "Rio de Janeiro",
+      "orders": 1846,
+      "revenue": 245525.35
+    },
+    {
+      "region": "Minas Gerais",
+      "orders": 1765,
+      "revenue": 212091.5
+    },
+    {
+      "region": "Rio Grande do Sul",
+      "orders": 888,
+      "revenue": 100488.82
+    },
+    {
+      "region": "Bahia",
+      "orders": 606,
+      "revenue": 89941.13
+    },
+    {
+      "region": "Parana",
+      "orders": 793,
+      "revenue": 81633.48
+    },
+    {
+      "region": "Santa Catarina",
+      "orders": 584,
+      "revenue": 68779.47
+    },
+    {
+      "region": "Distrito Federal",
+      "orders": 317,
+      "revenue": 47322.56
+    },
+    {
+      "region": "Espirito Santo",
+      "orders": 357,
+      "revenue": 47207.38
+    },
+    {
+      "region": "Pernambuco",
+      "orders": 290,
+      "revenue": 39686.5
+    },
+    {
+      "region": "Ceara",
+      "orders": 237,
+      "revenue": 34188.57
+    },
+    {
+      "region": "Para",
+      "orders": 201,
+      "revenue": 29145.21
+    },
+    {
+      "region": "Goias",
+      "orders": 290,
+      "revenue": 29097.7
+    },
+    {
+      "region": "Maranhao",
+      "orders": 147,
+      "revenue": 26608.13
+    },
+    {
+      "region": "Paraiba",
+      "orders": 93,
+      "revenue": 22842.2
+    },
+    {
+      "region": "Alagoas",
+      "orders": 87,
+      "revenue": 18380.46
+    },
+    {
+      "region": "Mato Grosso",
+      "orders": 141,
+      "revenue": 17926.64
+    },
+    {
+      "region": "Mato Grosso do Sul",
+      "orders": 110,
+      "revenue": 14216.47
+    },
+    {
+      "region": "Piaui",
+      "orders": 107,
+      "revenue": 13778.96
+    },
+    {
+      "region": "Sergipe",
+      "orders": 78,
+      "revenue": 10469.73
+    },
+    {
+      "region": "Rio Grande do Norte",
+      "orders": 67,
+      "revenue": 10048.7
+    },
+    {
+      "region": "Tocantins",
+      "orders": 51,
+      "revenue": 8658.31
+    },
+    {
+      "region": "Rondonia",
+      "orders": 42,
+      "revenue": 5466.71
+    },
+    {
+      "region": "Amapa",
+      "orders": 17,
+      "revenue": 4718.25
+    },
+    {
+      "region": "Amazonas",
+      "orders": 34,
+      "revenue": 4563.88
+    },
+    {
+      "region": "Acre",
+      "orders": 17,
+      "revenue": 4306.15
+    },
+    {
+      "region": "Roraima",
+      "orders": 10,
+      "revenue": 565.53
+    }
+  ],
+  "evolution_mensuelle": [
+    {
+      "Mois": "2016-10",
+      "chiffre_affaires": 5486.53
+    },
+    {
+      "Mois": "2017-01",
+      "chiffre_affaires": 12688.63
+    },
+    {
+      "Mois": "2017-02",
+      "chiffre_affaires": 28790.08
+    },
+    {
+      "Mois": "2017-03",
+      "chiffre_affaires": 52739.18
+    },
+    {
+      "Mois": "2017-04",
+      "chiffre_affaires": 36643.43
+    },
+    {
+      "Mois": "2017-05",
+      "chiffre_affaires": 66302.08
+    },
+    {
+      "Mois": "2017-06",
+      "chiffre_affaires": 53323.17
+    },
+    {
+      "Mois": "2017-07",
+      "chiffre_affaires": 60996.79
+    },
+    {
+      "Mois": "2017-08",
+      "chiffre_affaires": 92533.81
+    },
+    {
+      "Mois": "2017-09",
+      "chiffre_affaires": 125006.84
+    },
+    {
+      "Mois": "2017-10",
+      "chiffre_affaires": 123199.01
+    },
+    {
+      "Mois": "2017-11",
+      "chiffre_affaires": 132298.83
+    },
+    {
+      "Mois": "2017-12",
+      "chiffre_affaires": 88458.83
+    },
+    {
+      "Mois": "2018-01",
+      "chiffre_affaires": 131678.69
+    },
+    {
+      "Mois": "2018-02",
+      "chiffre_affaires": 148595.04
+    },
+    {
+      "Mois": "2018-03",
+      "chiffre_affaires": 146485.12
+    },
+    {
+      "Mois": "2018-04",
+      "chiffre_affaires": 112828.17
+    },
+    {
+      "Mois": "2018-05",
+      "chiffre_affaires": 104325.87
+    },
+    {
+      "Mois": "2018-06",
+      "chiffre_affaires": 98131.82
+    },
+    {
+      "Mois": "2018-07",
+      "chiffre_affaires": 107967.08
+    },
+    {
+      "Mois": "2018-08",
+      "chiffre_affaires": 105251.5
+    }
+  ],
+  "category_metrics": [
+    {
+      "categorie": "Computers Accessories",
+      "chiffre_affaires": 888724.61,
+      "quantite_vendue": 7644,
+      "nb_commandes": 6530
+    },
+    {
+      "categorie": "Telephony",
+      "chiffre_affaires": 309860.23,
+      "quantite_vendue": 4430,
+      "nb_commandes": 4093
+    },
+    {
+      "categorie": "Electronics",
+      "chiffre_affaires": 155043.93,
+      "quantite_vendue": 2729,
+      "nb_commandes": 2517
+    },
+    {
+      "categorie": "Consoles Games",
+      "chiffre_affaires": 148003.37,
+      "quantite_vendue": 1089,
+      "nb_commandes": 1018
+    },
+    {
+      "categorie": "Audio",
+      "chiffre_affaires": 50570.6,
+      "quantite_vendue": 362,
+      "nb_commandes": 348
+    },
+    {
+      "categorie": "Fixed Telephony",
+      "chiffre_affaires": 55315.21,
+      "quantite_vendue": 255,
+      "nb_commandes": 212
+    },
+    {
+      "categorie": "Computers",
+      "chiffre_affaires": 218684.14,
+      "quantite_vendue": 199,
+      "nb_commandes": 177
+    },
+    {
+      "categorie": "Tablets Printing Image",
+      "chiffre_affaires": 7528.41,
+      "quantite_vendue": 83,
+      "nb_commandes": 79
+    }
+  ],
+  "quality": {
+    "valid_rows": 15286,
+    "invalid_rows": 0,
+    "error_file": "errors.csv"
+  }
+}

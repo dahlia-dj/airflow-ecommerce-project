@@ -212,7 +212,10 @@ def compute_kpis(**context):
     df["Date"] = pd.to_datetime(df["Date"])
     df["Mois"] = df["Date"].dt.to_period("M").astype(str)
 
+    #nombre total de commandes
     nb_commandes = df["IDCommande"].nunique()
+    
+    
     nb_clients = df["Client"].nunique()
     chiffre_affaires = round(float(df["Montant"].sum()), 2)
     panier_moyen = round(chiffre_affaires / nb_commandes, 2) if nb_commandes else 0.0

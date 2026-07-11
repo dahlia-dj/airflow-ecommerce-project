@@ -1,0 +1,19 @@
+# Image Jenkins personnalisee incluant Python3 (absent de l'image officielle),
+# necessaire aux stages "Install dependencies", "Run tests" et "Validate DAG"
+# du Jenkinsfile (venv, pytest, py_compile).
+
+FROM jenkins/jenkins:lts-jdk17
+
+USER root
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3 \
+        python3-venv \
+        python3-pip \
+        && rm -rf /var/lib/apt/lists/*
+
+# Verification que python3 est bien accessible dans le PATH utilise par les stages Jenkins
+RUN python3 --version
+
+USER jenkins
