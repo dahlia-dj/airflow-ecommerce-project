@@ -40,7 +40,9 @@ pipeline {
                     python3 -m venv "${VENV_DIR}"
                     . "${VENV_DIR}/bin/activate"
                     pip install --upgrade pip
-                    pip install -r requirements.txt
+                    PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+                    pip install -r requirements.txt \
+                        --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-${PYVER}.txt"
                 '''
             }
         }
@@ -75,7 +77,7 @@ pipeline {
                 echo "=== Deploiement du DAG vers Airflow ==="
                 sh '''
                     cp dags/ecommerce_sales_pipeline.py "${AIRFLOW_DAGS_DIR}/"
-                    echo "DAG deploye vers ${AIRFLOW_DAGS_DIR}"
+                    echo "DAG déployé vers ${AIRFLOW_DAGS_DIR}"
                 '''
             }
         }
@@ -102,10 +104,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline execute avec succes : DAG deploye, declenche et donnees verifiees dans MongoDB."
+            echo "Pipeline exécute avec succès : DAG déployé, déclenché et données vérifiées dans MongoDB."
         }
         failure {
-            echo "Le pipeline a echoue. Consulter les logs des stages ci-dessus pour diagnostiquer."
+            echo "Le pipeline a échoue. Consulter les logs des stages ci-dessus pour diagnostiquer."
         }
         always {
             cleanWs()

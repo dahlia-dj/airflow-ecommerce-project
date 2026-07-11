@@ -1,19 +1,33 @@
-# Image Jenkins personnalisee incluant Python3 (absent de l'image officielle),
-# necessaire aux stages "Install dependencies", "Run tests" et "Validate DAG"
-# du Jenkinsfile (venv, pytest, py_compile).
+# Image Jenkins personnalisee incluant Python 3.11 (absent de l'image
+# officielle), necessaire aux stages "Install dependencies", "Run tests" et
+# "Validate DAG" du Jenkinsfile (venv, pytest, py_compile).
+#
+# Python est copie depuis l'image officielle python:3.11-slim plutot
+# qu'installe via apt, afin de figer une version exacte compatible avec
+# apache-airflow==2.9.3 (qui ne supporte pas Python 3.13+, or l'image
+# Jenkins officielle installe desormais Python 3.13 par defaut via apt).
+
+FROM python:3.11-slim AS python-build
 
 FROM jenkins/jenkins:lts-jdk17
 
 USER root
 
+# Copie du runtime Python 3.11 complet (binaires + libs + pip) depuis l'image
+# officielle, sans dependre de la version fournie par apt sur l'image Jenkins.
+COPY --from=python-build /usr/local /usr/local
+
+# Bibliotheques systeme minimales requises par le runtime Python copie
+# (ssl, ffi, etc.) si elles ne sont pas deja presentes sur l'image Jenkins.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3 \
-        python3-venv \
-        python3-pip \
-        && rm -rf /var/lib/apt/lists/*
+        libssl3 \
+        libffi8 \
+        zlib1g \
+        && rm -rf /var/lib/apt/lists/* \
+        && ldconfig
 
-# Verification que python3 est bien accessible dans le PATH utilise par les stages Jenkins
-RUN python3 --version
+# Verification que python3 (3.11.x) est bien accessible dans le PATH
+RUN python3 --version && python3 -m venv --help > /dev/null && python3 -m pip --version
 
 USER jenkins

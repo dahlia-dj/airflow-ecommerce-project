@@ -1,6 +1,6 @@
 # Pipeline E-commerce — Industrialisation avec Git, Jenkins, Airflow et MongoDB
 
-Projet de Data Engineering — Master Informatique
+Projet de Data Engineering
 Industrialisation d'un pipeline d'analyse des ventes pour une entreprise
 e-commerce spécialisée dans la vente de produits informatiques.
 
@@ -15,7 +15,7 @@ conteneurisée avec Docker.
 ## 2. Architecture
 
 ```
-Développeur → Git → Jenkins → Tests / Validation DAG / Déploiement / Trigger
+Dev → Git → Jenkins → Tests / Validation DAG / Déploiement / Trigger
                                         ↓
                                  Apache Airflow
                                         ↓
@@ -204,6 +204,3 @@ après validation (voir historique des commits : `git log --oneline --graph --al
 - Compatibilité des versions (`werkzeug`/`flask`/`sqlalchemy`) lors de l'installation locale d'Airflow pour les tests CI.
 - Choix du périmètre de catégories : le dataset Olist couvre des dizaines de catégories généralistes (mode, meubles, beauté...) ; un filtrage sur les catégories informatique/électronique a été nécessaire pour rester cohérent avec le contexte métier de l'entreprise cible.
 
-## 13. Auteurs
-
-Groupe Data Engineering — Master Informatique — Juin 2026
