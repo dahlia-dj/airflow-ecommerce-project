@@ -41,8 +41,8 @@ pipeline {
                     . "${VENV_DIR}/bin/activate"
                     pip install --upgrade pip
                     PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-                    pip install -r requirements.txt \
-                        --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-${PYVER}.txt"
+                    pip install --no-cache-dir -r requirements.txt --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-${PYVER}.txt
+                   
                 '''
             }
         }
