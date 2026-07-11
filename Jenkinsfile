@@ -11,6 +11,8 @@ pipeline {
     environment {
         PROJECT_DIR       = "${WORKSPACE}"
         VENV_DIR          = "${WORKSPACE}/.venv"
+        AIRFLOW_DAGS_DIR  = "/opt/airflow/dags"
+        AIRFLOW_HOME      = "/opt/airflow"
         MONGO_URI         = "mongodb://mongodb:27017"
         DAG_ID            = "ecommerce_sales_pipeline"
     }
@@ -74,8 +76,9 @@ pipeline {
             steps {
                 echo "=== Deploiement du DAG vers Airflow ==="
                 sh '''
-                    docker cp dags/ecommerce_sales_pipeline.py airflow_webserver:/opt/airflow/dags/
-                    echo "DAG déployé vers le volume Airflow"
+                    mkdir -p /opt/airflow/dags/
+                    cp dags/ecommerce_sales_pipeline.py "${AIRFLOW_DAGS_DIR}/"
+                    echo "DAG déployé vers ${AIRFLOW_DAGS_DIR}"
                 '''
             }
         }
@@ -84,7 +87,7 @@ pipeline {
             steps {
                 echo "=== Declenchement du DAG Airflow ==="
                 sh '''
-                    docker exec -T airflow_webserver airflow dags trigger ${DAG_ID}
+                    docker exec airflow_webserver airflow dags trigger ecommerce_sales_pipeline
                 '''
             }
         }
