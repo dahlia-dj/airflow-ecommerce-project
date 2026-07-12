@@ -1,18 +1,9 @@
-// Jenkinsfile
-// -----------
-// Pipeline CI/CD du projet "ecommerce-sales-pipeline".
-// Realise le checkout du code, l'installation des dependances, les tests,
-// la validation et le deploiement du DAG Airflow, puis le declenchement
-// du DAG et la verification du stockage MongoDB.
-
 pipeline {
     agent any
 
     environment {
-        PROJECT_DIR       = "${WORKSPACE}"
-        VENV_DIR          = "${WORKSPACE}/.venv"
-        AIRFLOW_DAGS_DIR  = "/opt/airflow/dags"
-        AIRFLOW_HOME      = "/opt/airflow"
+        AIRFLOW_IMAGE     = "ecommerce-airflow:latest"
+        AIRFLOW_CONTAINER = "airflow_webserver"
         MONGO_URI         = "mongodb://mongodb:27017"
         DAG_ID            = "ecommerce_sales_pipeline"
     }
@@ -35,24 +26,30 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                echo "=== Installation des dependances Python ==="
+                echo "=== Verification des dependances Python (image ${AIRFLOW_IMAGE}) ==="
                 sh '''
-                    python3 -m venv "${VENV_DIR}"
-                    . "${VENV_DIR}/bin/activate"
-                    pip install --upgrade pip
-                    PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-                    pip install --no-cache-dir -r requirements.txt --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-${PYVER}.txt
-                   
+                    CID=$(docker create -w /tmp --entrypoint bash "${AIRFLOW_IMAGE}" \
+                        -c "pip install --user -r requirements.txt")
+                    docker cp requirements.txt "${CID}":/tmp/requirements.txt
+                    docker start -a "${CID}"
+                    docker rm -f "${CID}"
                 '''
             }
         }
 
         stage('Run tests') {
             steps {
-                echo "=== Execution des tests unitaires avec pytest ==="
+                echo "=== Execution des tests unitaires avec pytest (image ${AIRFLOW_IMAGE}) ==="
                 sh '''
-                    . "${VENV_DIR}/bin/activate"
-                    pytest tests/ -v --junitxml=reports/test-results.xml
+                    mkdir -p reports
+                    CID=$(docker create -w /tmp --entrypoint bash "${AIRFLOW_IMAGE}" \
+                        -c "pytest tests/ -v --junitxml=reports/test-results.xml")
+                    docker cp dags "${CID}":/tmp/dags
+                    docker cp tests "${CID}":/tmp/tests
+                    docker cp requirements.txt "${CID}":/tmp/requirements.txt
+                    docker start -a "${CID}"
+                    docker cp "${CID}":/tmp/reports/test-results.xml reports/test-results.xml
+                    docker rm -f "${CID}"
                 '''
             }
             post {
@@ -64,21 +61,23 @@ pipeline {
 
         stage('Validate DAG') {
             steps {
-                echo "=== Validation syntaxique du DAG Airflow ==="
+                echo "=== Validation syntaxique du DAG Airflow (image ${AIRFLOW_IMAGE}) ==="
                 sh '''
-                    . "${VENV_DIR}/bin/activate"
-                    python -m py_compile dags/*.py
+                    CID=$(docker create -w /tmp --entrypoint bash "${AIRFLOW_IMAGE}" \
+                        -c "python -m py_compile dags/*.py")
+                    docker cp dags "${CID}":/tmp/dags
+                    docker start -a "${CID}"
+                    docker rm -f "${CID}"
                 '''
             }
         }
 
         stage('Deploy DAG') {
             steps {
-                echo "=== Deploiement du DAG vers Airflow ==="
+                echo "=== Deploiement du DAG vers le conteneur Airflow ==="
                 sh '''
-                    mkdir -p /opt/airflow/dags/
-                    cp dags/ecommerce_sales_pipeline.py "${AIRFLOW_DAGS_DIR}/"
-                    echo "DAG déployé vers ${AIRFLOW_DAGS_DIR}"
+                    docker cp dags/ecommerce_sales_pipeline.py "${AIRFLOW_CONTAINER}:/opt/airflow/dags/"
+                    echo "DAG deploye dans ${AIRFLOW_CONTAINER}:/opt/airflow/dags/"
                 '''
             }
         }
@@ -86,9 +85,7 @@ pipeline {
         stage('Trigger DAG') {
             steps {
                 echo "=== Declenchement du DAG Airflow ==="
-                sh '''
-                    docker exec airflow_webserver airflow dags trigger ecommerce_sales_pipeline
-                '''
+                sh 'docker exec "${AIRFLOW_CONTAINER}" airflow dags trigger "${DAG_ID}"'
             }
         }
 
@@ -96,8 +93,8 @@ pipeline {
             steps {
                 echo "=== Verification des donnees stockees dans MongoDB ==="
                 sh '''
-                    . "${VENV_DIR}/bin/activate"
-                    python scripts/check_mongodb.py --uri "${MONGO_URI}"
+                    docker cp scripts/check_mongodb.py "${AIRFLOW_CONTAINER}:/opt/airflow/scripts/check_mongodb.py"
+                    docker exec "${AIRFLOW_CONTAINER}" python /opt/airflow/scripts/check_mongodb.py --uri "${MONGO_URI}"
                 '''
             }
         }
@@ -105,10 +102,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline exécute avec succès : DAG déployé, déclenché et données vérifiées dans MongoDB."
+            echo "Pipeline execute avec succes : DAG deploye, declenche et donnees verifiees dans MongoDB."
         }
         failure {
-            echo "Le pipeline a échoue. Consulter les logs des stages ci-dessus pour diagnostiquer."
+            echo "Le pipeline a echoue. Consulter les logs des stages ci-dessus pour diagnostiquer."
         }
         always {
             cleanWs()
