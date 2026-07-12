@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo "=== Verification des dependances Python (image ${AIRFLOW_IMAGE}) ==="
                 sh '''
-                    CID=$(docker create -w /tmp -e PYTHONDONTWRITEBYTECODE=1 --entrypoint bash "${AIRFLOW_IMAGE}" \
+                    CID=$(docker create -w /tmp -u root -e PYTHONDONTWRITEBYTECODE=1 --entrypoint bash "${AIRFLOW_IMAGE}" \
                         -c "pip install -r requirements.txt")
                     docker cp requirements.txt "${CID}":/tmp/requirements.txt
                     docker start -a "${CID}"
@@ -43,7 +43,7 @@ pipeline {
                 echo "=== Execution des tests unitaires avec pytest (image ${AIRFLOW_IMAGE}) ==="
                 sh '''
                     mkdir -p reports
-                    CID=$(docker create -w /tmp -e PYTHONDONTWRITEBYTECODE=1 --entrypoint bash "${AIRFLOW_IMAGE}" \
+                    CID=$(docker create -w /tmp -u root -e PYTHONDONTWRITEBYTECODE=1 --entrypoint bash "${AIRFLOW_IMAGE}" \
                         -c "pytest tests/ -v --junitxml=reports/test-results.xml")
                     docker cp dags "${CID}":/tmp/dags
                     docker cp tests "${CID}":/tmp/tests
@@ -64,7 +64,7 @@ pipeline {
             steps {
                 echo "=== Validation syntaxique du DAG Airflow (image ${AIRFLOW_IMAGE}) ==="
                 sh '''
-                    CID=$(docker create -w /tmp -e PYTHONDONTWRITEBYTECODE=1 --entrypoint bash "${AIRFLOW_IMAGE}" \
+                    CID=$(docker create -w /tmp -u root -e PYTHONDONTWRITEBYTECODE=1 --entrypoint bash "${AIRFLOW_IMAGE}" \
                         -c "python -m py_compile dags/*.py")
                     docker cp dags "${CID}":/tmp/dags
                     docker start -a "${CID}"
