@@ -30,7 +30,7 @@ pipeline {
                 echo "=== Verification des dependances Python (image ${AIRFLOW_IMAGE}) ==="
                 sh '''
                     CID=$(docker create -w /tmp --entrypoint bash "${AIRFLOW_IMAGE}" \
-                        -c "pip install --user -r requirements.txt")
+                        -c "pip install -r requirements.txt")
                     docker cp requirements.txt "${CID}":/tmp/requirements.txt
                     docker start -a "${CID}"
                     docker rm -f "${CID}"
@@ -86,7 +86,7 @@ pipeline {
         stage('Trigger DAG') {
             steps {
                 echo "=== Declenchement du DAG Airflow ==="
-                sh 'docker exec "${AIRFLOW_CONTAINER}" airflow dags trigger "${DAG_ID}"'
+                sh 'docker exec -T "${AIRFLOW_CONTAINER}" airflow dags trigger "${DAG_ID}"'
             }
         }
 
@@ -95,7 +95,7 @@ pipeline {
                 echo "=== Verification des donnees stockees dans MongoDB ==="
                 sh '''
                     docker cp scripts/check_mongodb.py "${AIRFLOW_CONTAINER}:/opt/airflow/scripts/check_mongodb.py"
-                    docker exec "${AIRFLOW_CONTAINER}" python /opt/airflow/scripts/check_mongodb.py --uri "${MONGO_URI}"
+                    docker exec -T "${AIRFLOW_CONTAINER}" python /opt/airflow/scripts/check_mongodb.py --uri "${MONGO_URI}"
                 '''
             }
         }
