@@ -15,6 +15,8 @@ pipeline {
         AIRFLOW_HOME      = "/opt/airflow"
         MONGO_URI         = "mongodb://mongodb:27017"
         DAG_ID            = "ecommerce_sales_pipeline"
+
+        PATH              = "/usr/local/bin:${env.PATH}"
     }
 
     options {
@@ -37,12 +39,12 @@ pipeline {
             steps {
                 echo "=== Installation des dependances Python ==="
                 sh '''
-                    python3 -m venv "${VENV_DIR}"
+                    /usr/local/bin/python3 -m venv "${VENV_DIR}"
                     . "${VENV_DIR}/bin/activate"
                     pip install --upgrade pip
                     PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
                     pip install --no-cache-dir -r requirements.txt --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-${PYVER}.txt
-                   
+                    
                 '''
             }
         }
