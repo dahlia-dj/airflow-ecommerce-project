@@ -1,14 +1,3 @@
-# Image Jenkins personnalisee : ajoute uniquement le CLI Docker, pour que
-# Jenkins puisse piloter des conteneurs "freres" via /var/run/docker.sock
-# (deja monte dans docker-compose.yml).
-#
-# Volontairement, aucun Python n'est installe ici : les stages du Jenkinsfile
-# qui ont besoin de Python/Airflow s'executent DANS le conteneur
-# ecommerce-airflow:latest (le meme que celui utilise en production pour
-# Airflow), via `docker run` / `docker exec`. Cela evite toute divergence de
-# version Python entre Jenkins et Airflow, et supprime le besoin de fichier
-# de contraintes ou de venv dans Jenkins lui-meme.
-
 FROM jenkins/jenkins:lts-jdk17
 
 USER root

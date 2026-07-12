@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 """
-check_mongodb.py
------------------
+
 Script de verification post-deploiement utilise par le pipeline Jenkins
 (stage "Verify MongoDB").
 
 Il se connecte a MongoDB, verifie que la base 'ecommerce_analytics' et la
-collection 'sales_metrics' existent, et controle qu'un document a bien ete
-insere recemment. Retourne un code de sortie != 0 en cas d'echec
+collection 'sales_metrics' existent, et controle qu'un document a bien été
+inseré recemment. Retourne un code de sortie != 0 en cas d'echec
 afin de faire echouer le job Jenkins si l'ecriture n'a pas eu lieu.
 
-Usage :
-    python scripts/check_mongodb.py [--uri MONGO_URI] [--max-age-hours 26]
 """
 
 import argparse

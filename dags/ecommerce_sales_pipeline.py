@@ -1,24 +1,3 @@
-"""
-DAG: ecommerce_sales_pipeline
-------------------------------
-Pipeline d'industrialisation des ventes e-commerce (produits informatiques).
-
-Etapes :
- 1. Attente du fichier CSV (FileSensor)
- 2. Verification d'existence du fichier
- 3. Verification que le fichier n'est pas vide
- 4. Controle qualite des données
- 5. Branchement (BranchPythonOperator) selon le resultat du controle qualite
- 6. Chargement des donnees
- 7. Calcul des indicateurs metier (KPI)
- 8. Transmission des metriques via XComs
- 9. Creation dynamique de taches d'analyse par categorie
-10. Gestion des erreurs avec Trigger Rules
-11. Generation d'un rapport final
-12. Stockage des metriques dans MongoDB
-
-"""
-
 from datetime import datetime, timedelta
 import json
 import logging
@@ -70,10 +49,10 @@ default_args = {
 }
 
 
-# Fonctions Python utilisees par les taches
+# Fonctions Python utilisées par les tâches
 
 def check_file_exists(**context):
-    """Etape 2 : verifie que le fichier source existe reellement sur le disque."""
+    """Etape 2 : verifie que le fichier source existe reellement."""
     if not os.path.isfile(SOURCE_FILE):
         raise FileNotFoundError(f"Fichier introuvable : {SOURCE_FILE}")
     logger.info("Fichier trouve : %s", SOURCE_FILE)
@@ -84,7 +63,7 @@ def check_file_not_empty(**context):
     """Etape 3 : verifie que le fichier n'est pas vide (0 octet ou 0 ligne de donnees)."""
     size = os.path.getsize(SOURCE_FILE)
     if size == 0:
-        raise ValueError("Le fichier source est vide (0 octet). Arret du workflow.")
+        raise ValueError("Le fichier source est vide (0 octet.")
 
     df = pd.read_csv(SOURCE_FILE)
     if df.shape[0] == 0:
@@ -96,36 +75,11 @@ def check_file_not_empty(**context):
 
 
 def _line_key(df):
-    """
-    Retourne la cle d'unicite d'une ligne de vente.
-
-    IMPORTANT : sur des donnees reelles (ex. Olist), une commande (IDCommande)
-    peut legitimement contenir plusieurs lignes de produits differents
-    (commande multi-articles). L'identifiant de commande seul n'est donc PAS
-    une cle unique de ligne. La cle d'unicite reelle est IDLigne (une ligne =
-    un article vendu dans une commande). Si la colonne IDLigne est absente
-    (ancien format mono-ligne-par-commande), on retombe sur IDCommande pour
-    rester compatible.
-    """
+    """Retourne la cle d'unicite d'une ligne de vente."""
     return "IDLigne" if "IDLigne" in df.columns else "IDCommande"
 
-
+#Etape 4 : controle qualité des données
 def data_quality_check(**context):
-    """
-    Etape 4 : controle qualite des donnees selon les regles de gestion metier :
-      - chaque ligne de vente doit avoir un identifiant unique (IDLigne, ou a
-        defaut IDCommande) : une ligne dupliquee signale une erreur d'ingestion ;
-      - une ligne avec un montant negatif doit etre rejetee ;
-      - une quantite nulle ou negative doit etre consideree comme invalide.
-
-    Note : une commande (IDCommande) peut contenir plusieurs lignes (plusieurs
-    produits achetes ensemble) ; ce n'est pas une anomalie. Seule une ligne
-    strictement dupliquee (meme IDLigne) est consideree comme une erreur.
-
-    Les lignes invalides sont isolees dans un fichier d'erreurs (errors.csv).
-    Le resultat (valide / invalide / partiel) est pousse en XCom pour piloter
-    le BranchPythonOperator.
-    """
     df = pd.read_csv(SOURCE_FILE)
     key_col = _line_key(df)
 
@@ -179,9 +133,9 @@ def data_quality_check(**context):
     else:
         return "quality_status_success"
 
-
+#Etape 6 : charge uniquement les lignes valides
 def load_data(**context):
-    """Etape 6 : charge uniquement les lignes valides (celles non presentes dans errors.csv)."""
+    
     df = pd.read_csv(SOURCE_FILE)
     key_col = _line_key(df)
     errors = pd.read_csv(ERROR_FILE) if os.path.getsize(ERROR_FILE) > 0 else pd.DataFrame(columns=df.columns)
@@ -194,18 +148,10 @@ def load_data(**context):
     context["ti"].xcom_push(key="valid_data_path", value=tmp_path)
     logger.info("Chargement termine : %s lignes valides ecrites dans %s", df_valid.shape[0], tmp_path)
 
-
+ 
+#Etape 7 + 8 : calcule les indicateurs metier globaux et les transmet via XCom :
 def compute_kpis(**context):
-    """
-    Etape 7 + 8 : calcule les indicateurs metier globaux et les transmet via XCom :
-      - nombre total de commandes
-      - nombre total de clients
-      - chiffre d'affaires total
-      - panier moyen
-      - top 10 des produits les plus vendus
-      - chiffre d'affaires par region
-      - evolution des ventes par mois
-    """
+   
     ti = context["ti"]
     valid_data_path = ti.xcom_pull(task_ids="load_data", key="valid_data_path")
     df = pd.read_parquet(valid_data_path)
@@ -215,11 +161,16 @@ def compute_kpis(**context):
     #nombre total de commandes
     nb_commandes = df["IDCommande"].nunique()
     
-    
+    #nombre total de clients
     nb_clients = df["Client"].nunique()
+    
+    #chiffre d'affaires total
     chiffre_affaires = round(float(df["Montant"].sum()), 2)
+    
+    #panier moyen
     panier_moyen = round(chiffre_affaires / nb_commandes, 2) if nb_commandes else 0.0
 
+    #top 10 des produits les plus vendus
     top_produits = (
         df.groupby("Produit")
         .agg(sales=("Quantite", "sum"), revenue=("Montant", "sum"))
@@ -230,6 +181,7 @@ def compute_kpis(**context):
     top_produits["revenue"] = top_produits["revenue"].round(2)
     top_produits_list = top_produits.to_dict(orient="records")
 
+    #chiffre d'affaires par region
     ca_par_region = (
         df.groupby("Region")
         .agg(orders=("IDCommande", "nunique"), revenue=("Montant", "sum"))
@@ -239,6 +191,7 @@ def compute_kpis(**context):
     ca_par_region["revenue"] = ca_par_region["revenue"].round(2)
     region_metrics = ca_par_region.rename(columns={"Region": "region"}).to_dict(orient="records")
 
+    #evolution des ventes par mois
     evolution_mensuelle = (
         df.groupby("Mois")["Montant"].sum().round(2).reset_index()
         .rename(columns={"Montant": "chiffre_affaires"})
@@ -259,16 +212,15 @@ def compute_kpis(**context):
 
     logger.info("KPI globaux calcules : %s", global_metrics)
 
-
+ 
+#Etape 9 : tache generée dynamiquement (une par categorie de produit).
 def analyse_categorie(categorie, **context):
-    """
-    Etape 9 : tache generee dynamiquement (une par categorie de produit).
-    Calcule le chiffre d'affaires et le volume vendu pour la categorie donnee.
-    """
+   
     ti = context["ti"]
     valid_data_path = ti.xcom_pull(task_ids="load_data", key="valid_data_path")
     df = pd.read_parquet(valid_data_path)
-
+    
+    #Calcule le chiffre d'affaires et le volume vendu pour la categorie donnée.
     df_cat = df[df["Categorie"] == categorie]
     if df_cat.empty:
         logger.warning("Aucune donnee pour la categorie %s", categorie)
@@ -284,9 +236,9 @@ def analyse_categorie(categorie, **context):
     logger.info("Analyse categorie %s : %s", categorie, resultat)
     return resultat
 
-
+#Recupere les resultats de toutes les taches dynamiques par categorie et les fusionne.
 def aggregate_category_metrics(**context):
-    """Recupere les resultats de toutes les taches dynamiques par categorie et les fusionne."""
+    
     ti = context["ti"]
     resultats = []
     for cat in CATEGORIES_CONNUES:
@@ -297,12 +249,8 @@ def aggregate_category_metrics(**context):
     logger.info("Agregation des metriques par categorie : %s categories traitees", len(resultats))
 
 
+#Etape 11 : genere un rapport final (JSON) qui recapitule l'execution du DAG.
 def generate_final_report(**context):
-    """
-    Etape 11 : genere un rapport final (JSON) qui recapitule l'execution du DAG.
-    Cette tache est configuree avec TriggerRule.ALL_DONE pour s'executer
-    meme si certaines taches en amont ont echoue ou ete ignorees.
-    """
     ti = context["ti"]
     execution_date = context["ds"]
 
@@ -347,9 +295,8 @@ def generate_final_report(**context):
     logger.info("Rapport final genere : %s (statut=%s)", report_path, status)
     return rapport
 
-
+#Etape 12 : stocke le document de metriques dans MongoDB.
 def store_metrics_mongodb(**context):
-    """Etape 12 : stocke le document de metriques dans MongoDB (base ecommerce_analytics)."""
     from pymongo import MongoClient
 
     ti = context["ti"]

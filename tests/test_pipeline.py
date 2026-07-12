@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "dags"))
 
 @pytest.fixture
 def temp_data_dir(monkeypatch):
-    """Cree un repertoire temporaire de donnees et patche les chemins du module DAG."""
+    #Cree un repertoire temporaire de donnees et patche les chemins du module DAG."""
     tmp_dir = tempfile.mkdtemp()
     monkeypatch.setenv("ECOMMERCE_DATA_DIR", tmp_dir)
 
@@ -41,7 +41,7 @@ def temp_data_dir(monkeypatch):
 
 
 class FakeTaskInstance:
-    """Simule le comportement minimal d'un TaskInstance Airflow pour les XComs."""
+    #Simule le comportement minimal d'un TaskInstance Airflow pour les XComs.
 
     def __init__(self):
         self._store = {}
@@ -156,12 +156,7 @@ def test_data_quality_all_valid_returns_success(temp_data_dir):
 
 
 def test_data_quality_allows_multi_item_orders_with_idligne(temp_data_dir):
-    """
-    Sur des donnees reelles (Olist), une commande peut contenir plusieurs
-    lignes de produits differents : IDCommande se repete alors legitimement.
-    Quand la colonne IDLigne (cle unique de ligne) est presente, ce cas ne
-    doit PAS etre traite comme un doublon.
-    """
+    
     pipeline, tmp_dir = temp_data_dir
     df = pd.DataFrame([
         ["2026-01-01 10:00:00", "ORD1", "ORD1_1", "Laptop Dell XPS", "Informatique", 1, 1200, 1200, "Paris", "CUST1"],
