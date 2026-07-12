@@ -1,33 +1,25 @@
-# Image Jenkins personnalisee incluant Python 3.11 (absent de l'image
-# officielle), necessaire aux stages "Install dependencies", "Run tests" et
-# "Validate DAG" du Jenkinsfile (venv, pytest, py_compile).
+# Image Jenkins personnalisee : ajoute uniquement le CLI Docker, pour que
+# Jenkins puisse piloter des conteneurs "freres" via /var/run/docker.sock
+# (deja monte dans docker-compose.yml).
 #
-# Python est copie depuis l'image officielle python:3.11-slim plutot
-# qu'installe via apt, afin de figer une version exacte compatible avec
-# apache-airflow==2.9.3 (qui ne supporte pas Python 3.13+, or l'image
-# Jenkins officielle installe desormais Python 3.13 par defaut via apt).
-
-FROM python:3.11-slim AS python-build
+# Volontairement, aucun Python n'est installe ici : les stages du Jenkinsfile
+# qui ont besoin de Python/Airflow s'executent DANS le conteneur
+# ecommerce-airflow:latest (le meme que celui utilise en production pour
+# Airflow), via `docker run` / `docker exec`. Cela evite toute divergence de
+# version Python entre Jenkins et Airflow, et supprime le besoin de fichier
+# de contraintes ou de venv dans Jenkins lui-meme.
 
 FROM jenkins/jenkins:lts-jdk17
 
 USER root
 
-# Copie du runtime Python 3.11 complet (binaires + libs + pip) depuis l'image
-# officielle, sans dependre de la version fournie par apt sur l'image Jenkins.
-COPY --from=python-build /usr/local /usr/local
-
-# Bibliotheques systeme minimales requises par le runtime Python copie
-# (ssl, ffi, etc.) si elles ne sont pas deja presentes sur l'image Jenkins.
+# Paquet Debian standard docker.io : plus robuste que le depot officiel
+# Docker (pas de gestion de cle/codename), largement suffisant pour de
+# simples "docker run / exec / cp" pilotes depuis le Jenkinsfile.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libssl3 \
-        libffi8 \
-        zlib1g \
-        && rm -rf /var/lib/apt/lists/* \
-        && ldconfig
+    apt-get install -y --no-install-recommends docker.io && \
+    rm -rf /var/lib/apt/lists/*
 
-# Verification que python3 (3.11.x) est bien accessible dans le PATH
-RUN python3 --version && python3 -m venv --help > /dev/null && python3 -m pip --version
+RUN docker --version
 
 USER jenkins
