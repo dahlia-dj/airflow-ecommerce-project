@@ -86,7 +86,7 @@ pipeline {
         stage('Trigger DAG') {
             steps {
                 echo "=== Declenchement du DAG Airflow ==="
-                sh 'docker exec -T "${AIRFLOW_CONTAINER}" airflow dags trigger "${DAG_ID}"'
+                sh 'docker exec "${AIRFLOW_CONTAINER}" airflow dags trigger "${DAG_ID}"'
             }
         }
 
