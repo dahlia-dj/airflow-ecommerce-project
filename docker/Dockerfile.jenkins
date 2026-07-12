@@ -1,33 +1,42 @@
-# Image Jenkins personnalisee incluant Python 3.11 (absent de l'image
-# officielle), necessaire aux stages "Install dependencies", "Run tests" et
-# "Validate DAG" du Jenkinsfile (venv, pytest, py_compile).
-#
-# Python est copie depuis l'image officielle python:3.11-slim plutot
-# qu'installe via apt, afin de figer une version exacte compatible avec
-# apache-airflow==2.9.3 (qui ne supporte pas Python 3.13+, or l'image
-# Jenkins officielle installe desormais Python 3.13 par defaut via apt).
 
-FROM python:3.11-slim AS python-build
+# Image Jenkins personnalisee : ajoute uniquement le CLI Docker, pour que
+# Jenkins puisse piloter des conteneurs "freres" via /var/run/docker.sock
+# (deja monte dans docker-compose.yml).
+#
+# Volontairement, aucun Python n'est installe ici : les stages du Jenkinsfile
+# qui ont besoin de Python/Airflow s'executent DANS le conteneur
+# ecommerce-airflow:latest (le meme que celui utilise en production pour
+# Airflow), via `docker run` / `docker exec`. Cela evite toute divergence de
+# version Python entre Jenkins et Airflow, et supprime le besoin de fichier
+# de contraintes ou de venv dans Jenkins lui-meme.
+#
+# NOTE : le paquet Debian generique "docker.io" s'est revele incomplet
+# (installation "reussie" mais binaire /usr/bin/docker absent) sur certains
+# snapshots recents de l'image Jenkins officielle. On utilise donc le depot
+# APT officiel de Docker (docker-ce-cli), avec detection dynamique du nom de
+# version Debian et repli sur "bookworm" si le depot Docker ne publie pas
+# encore de paquets pour cette version precise.
 
 FROM jenkins/jenkins:lts-jdk17
 
 USER root
 
-# Copie du runtime Python 3.11 complet (binaires + libs + pip) depuis l'image
-# officielle, sans dependre de la version fournie par apt sur l'image Jenkins.
-COPY --from=python-build /usr/local /usr/local
-
-# Bibliotheques systeme minimales requises par le runtime Python copie
-# (ssl, ffi, etc.) si elles ne sont pas deja presentes sur l'image Jenkins.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libssl3 \
-        libffi8 \
-        zlib1g \
-        && rm -rf /var/lib/apt/lists/* \
-        && ldconfig
+    apt-get install -y --no-install-recommends ca-certificates curl gnupg && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    . /etc/os-release && \
+    CODENAME="${VERSION_CODENAME:-bookworm}" && \
+    if ! curl -fsSL "https://download.docker.com/linux/debian/dists/${CODENAME}/Release" -o /dev/null 2>/dev/null; then \
+        CODENAME=bookworm; \
+    fi && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian ${CODENAME} stable" \
+        > /etc/apt/sources.list.d/docker.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends docker-ce-cli && \
+    rm -rf /var/lib/apt/lists/*
 
-# Verification que python3 (3.11.x) est bien accessible dans le PATH
-RUN python3 --version && python3 -m venv --help > /dev/null && python3 -m pip --version
+RUN docker --version
 
 USER jenkins
