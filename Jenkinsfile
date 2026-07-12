@@ -86,7 +86,7 @@ pipeline {
             steps {
                 echo "=== Declenchement du DAG Airflow ==="
                 sh '''
-                    docker exec airflow_webserver airflow dags trigger ecommerce_sales_pipeline
+                        docker exec airflow_webserver airflow dags trigger ecommerce_sales_pipeline
                 '''
             }
         }
