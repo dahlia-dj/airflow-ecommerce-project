@@ -95,7 +95,7 @@ pipeline {
                 echo "=== Verification des donnees stockees dans MongoDB ==="
                 sh '''
                     docker cp scripts/check_mongodb.py "${AIRFLOW_CONTAINER}:/opt/airflow/scripts/check_mongodb.py"
-                    docker exec -T "${AIRFLOW_CONTAINER}" python /opt/airflow/scripts/check_mongodb.py --uri "${MONGO_URI}"
+                    docker exec "${AIRFLOW_CONTAINER}" python /opt/airflow/scripts/check_mongodb.py --uri "${MONGO_URI}"
                 '''
             }
         }
