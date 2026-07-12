@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo "=== Verification des dependances Python (image ${AIRFLOW_IMAGE}) ==="
                 sh '''
-                    CID=$(docker create -w /tmp -u root -e PYTHONDONTWRITEBYTECODE=1 --entrypoint bash "${AIRFLOW_IMAGE}" \
+                    CID=$(docker create -w /tmp -e PYTHONDONTWRITEBYTECODE=1 --entrypoint bash "${AIRFLOW_IMAGE}" \
                         -c "pip install -r requirements.txt")
                     docker cp requirements.txt "${CID}":/tmp/requirements.txt
                     docker start -a "${CID}"
